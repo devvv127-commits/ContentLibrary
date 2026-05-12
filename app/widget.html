@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <!-- Tailwind CSS (visual refresh to match UI) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: "#206bc4", hover: "#174ea6" },
+            subtle: "#f8fafc",
+            line: "#e5e9f2",
+          },
+          boxShadow: {
+            soft: "0 2px 18px rgba(32,107,196,0.08)",
+          },
+        },
+      },
+    };
+  </script>
+  <script src="https://live.zwidgets.com/js-sdk/1.5/ZohoEmbededAppSDK.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <style>
+    :root {
+      --primary: #206bc4;
+      --primary-hover: #174ea6;
+      --border: #d0d7de;
+      --bg: #f8fafc;
+      --shadow: 0 1px 3px rgba(0,0,0,0.03);
+      --tag-bg: #b2c834;
+      --danger: #b23c3c;
+    }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f8fafc;
+      overflow-x: hidden; /* Prevent horizontal scrollbar */
+    }
+    .container {
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 0;
+      margin-top: 0;
+      margin-bottom: 0;
+      display: flex;
+      flex-direction: row;
+      padding-bottom: 100px;
+      overflow-x: hidden; /* Prevent horizontal scrollbar */
+      background: transparent;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .main-content-wrapper {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 0;
+    }
+    #table-container {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: visible;
+      padding: 0 0 120px 0; /* reserve space for fixed bottom bar */
+    }
+    .send-mail-bar {
+      position: fixed;
+      bottom: 0;
+      left: 290px; /* Account for sidebar width */
+      right: 0;
+      width: calc(100% - 260px); /* Adjust width to account for sidebar */
+      box-sizing: border-box;
+      z-index: 99999; /* raise above other overlays */
+      background: rgba(255,255,255,0.96);
+      box-shadow: 0 -6px 30px rgba(32,107,196,0.12);
+      border-radius: 0 0 14px 14px;
+      min-height: 64px;
+      padding: 12px 40px;
+      margin: 0;
+      /* Use CSS Grid to align pagination and actions cleanly */
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 16px;
+    }
+    #submitBtn {
+      background: #206bc4;
+      color: #fff;
+      font-weight: 600;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(32,107,196,0.13);
+      padding: 10px 20px;
+      margin: 0;
+      transition: background .2s, box-shadow .2s, transform .12s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    #submitBtn::before {
+      content: "\f1d8";
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+      font-size: 1.1rem;
+    }
+    #submitBtn:hover, #submitBtn:focus {
+      background: #174ea6;
+      box-shadow: 0 4px 16px rgba(32,107,196,0.18);
+      transform: scale(1.02);
+    }
+    #submitBtn:disabled {
+      opacity: 0.5 !important;
+      cursor: not-allowed !important;
+      transform: none !important;
+    }
+    #submitBtn:disabled:hover {
+      background: #206bc4;
+      box-shadow: 0 2px 8px rgba(32,107,196,0.13);
+      transform: none !important;
+    }
+    .bottom-bar-flex {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      gap: 12px;
+      padding: 0;
+      box-sizing: border-box;
+      position: relative;
+    }
+    .bottom-bar-flex .pagination {
+      margin: 0;
+      text-align: left;
+      width: auto;
+      min-width: 0;
+      flex: none;
+      z-index: 1;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .bottom-bar-flex .pagination button {
+      background: #f0f4f8;
+      border: 1px solid #e5e9f2;
+      border-radius: 6px;
+      color: #64748b;
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 60px;
+    }
+    .bottom-bar-flex .pagination button:hover:not(:disabled) {
+      background: #e0e8f0;
+      color: #206bc4;
+    }
+    .bottom-bar-flex .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .bottom-bar-flex .pagination span {
+      font-size: 0.9rem;
+      color: #64748b;
+      font-weight: 500;
+    }
+    .bottom-bar-flex .btn-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      flex: 1 1 auto;
+      position: relative;
+      margin-bottom: 0;
+    }
+    .bottom-bar-flex #submitBtn {
+      margin: 0;
+      display: block;
+    }
+    h2 { margin: 0; font-size: 2rem; font-weight: 600; letter-spacing: 1px; }
+    #searchInput, .tab-bar #searchInput {
+      padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);
+      width: 220px; font-size: 1rem; transition: border .2s; margin-left: auto;
+      background: rgba(255,255,255,0.7);
+      box-shadow: 0 2px 8px rgba(32,107,196,0.07);
+    }
+    #searchInput:focus, .tab-bar #searchInput:focus {
+      border: 1.5px solid var(--primary); outline: none;
+      box-shadow: 0 2px 12px rgba(32,107,196,0.13);
+    }
+    table {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      border-collapse: collapse;
+      border-spacing: 0;
+      background: #fff;
+      border-radius: 0;
+      overflow: visible;
+      box-shadow: none;
+      border: none;
+      font-size: .95rem;
+      table-layout: auto;
+    }
+    th, td {
+      padding: 12px 16px; 
+      text-align: left; 
+      border-bottom: 1px solid #e5e9f2;
+    }
+    th:not(:last-child), td:not(:last-child) { border-right: none; }
+    th {
+      background: #fff;
+      box-shadow: none;
+      font-size: 0.95rem;
+      font-weight: 600; 
+      border-bottom: 1px solid #e5e9f2;
+      color: #334155;
+    }
+    tr:last-child td { border-bottom: none; }
+    /* Use a consistent non-white row background for all rows */
+    td { 
+      background: #f8fafc; /* unified row background (was white) */
+      vertical-align: top; 
+      font-size: 0.95rem;
+      transition: background 0.18s;
+      color: #475569;
+    }
+    /* keep the even-row rule but ensure it matches the unified color (no visual stripe) */
+    tbody tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+    tbody tr:hover td {
+      background: #f0f4f8;
+    }
+    .table-scroll {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: visible;
+      border-top: none;
+    }
+    .description-clamp {
+      display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical;
+      overflow: hidden; text-overflow: ellipsis; line-height: 1.5; max-height: 4.5em;
+      white-space: normal; word-break: break-word; position: relative; padding-right: 8px;
+      background: rgba(243,246,250,0.7);
+      border-radius: 6px;
+      padding: 4px 8px 4px 4px;
+    }
+    .description-clamp .desc-toggle[data-mode="more"] {
+      color: var(--primary); cursor: pointer; font-weight: 500; margin-left: 0;
+      text-decoration: underline; background: #fff; position: absolute; right: 0; bottom: 0;
+      padding-left: 0; background: linear-gradient(to right,rgba(255,255,255,0),#fff 60%); display: none;
+    }
+    .desc-toggle[data-mode="less"] {
+      color: var(--primary); cursor: pointer; font-weight: 500; margin-left: 6px;
+      text-decoration: underline; background: #fff; position: static; padding-left: 4px;
+    }
+    .tab-bar {
+      display: flex; 
+      gap: 0; 
+      margin: 0; 
+      border-bottom: 1px solid #e5e9f2;
+      padding: 0; 
+      align-items: flex-start; 
+      justify-content: flex-start;
+      background: #fff;
+      border-radius: 0;
+      box-shadow: none;
+      flex-direction: column;
+    }
+    .tab-btn {
+      background: #f0f4f8; 
+      border: none; 
+      border-radius: 6px; 
+      color: #64748b;
+      font-size: 0.85rem; 
+      font-weight: 500; 
+      padding: 8px 16px; 
+      margin: 0 4px;
+      box-shadow: none;
+      letter-spacing: 0.2px;
+      cursor: pointer; 
+      outline: none;
+      transition: all .2s; 
+      position: relative;
+      border-bottom: none;
+    }
+    .tab-btn:hover {
+      background: #e0e8f0;
+      color: var(--primary);
+    }
+    .tab-btn.active {
+      background: #dde8f5; 
+      color: var(--primary); 
+      font-weight: 600;
+      border-bottom: none;
+    }
+    .tab-btn.active::after {
+      display: none;
+    }
+    
+    .main-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 0;
+      padding: 0;
+      width: auto;
+    }
+    .tab-bar #searchInput {
+      margin-left: auto;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      width: 220px;
+      font-size: 1rem;
+      transition: border .2s;
+      background: rgba(255,255,255,0.7);
+      box-shadow: 0 2px 8px rgba(32,107,196,0.07);
+    }
+    .tab-bar #searchInput:focus {
+      border: 1.5px solid var(--primary);
+      outline: none;
+      box-shadow: 0 2px 12px rgba(32,107,196,0.13);
+    }
+    .tag-pill {
+      display: inline-flex; align-items: center; background: var(--tag-bg); color: #fff;
+      font-weight: 500; border-radius: 8px; padding: 2px 12px 2px 6px; margin-right: 6px;
+      font-size: .98rem; line-height: 1.5; gap: 4px;
+    }
+    .tag-pill svg {
+      width: 18px; height: 18px; margin-right: 3px; fill: #5a6470; background: #e6e9f0;
+      border-radius: 4px; padding: 2px;
+    }
+    .crm-tag {
+      display: inline-block; position: relative; color: #fff; font-weight: 500;
+      font-size: .92rem; min-width: 60px; padding: 2px 10px; margin-right: 6px; margin-bottom: 2px;
+      border-radius: 1px; line-height: 1.2; text-align: center; vertical-align: middle;
+      box-sizing: border-box; z-index: 1;
+    }
+    .crm-tag::after {
+      content: ""; position: absolute; right: -10px; top: 0; width: 0; height: 0;
+      border-top: 12px solid transparent; border-bottom: 10px solid transparent;
+      border-left: 11px solid var(--tag-color, #1976d2); border-radius: 0 5px 5px 0; z-index: 2;
+    }
+    /* Tag color classes merged into one rule using attribute selector */
+    .crm-tag[data-tag="Compliance"]      { background: #1976d2; }
+    .crm-tag[data-tag="KYC"]             { background: #43a047; }
+    .crm-tag[data-tag="Support"]         { background: #f9a825; color: #fff; }
+    .crm-tag[data-tag="Risk"]            { background: #d32f2f; }
+    .crm-tag[data-tag="Info"]            { background: #455a64; }
+    .crm-tag[data-tag="HR"]              { background: #8e24aa; }
+    .crm-tag[data-tag="Legal"]           { background: #00838f; }
+    .crm-tag[data-tag="Finance"]         { background: #6d4c41; }
+    .crm-tag[data-tag="IT"]              { background: #3949ab; }
+    .crm-tag[data-tag="Sales"]           { background: #e65100; }
+    .crm-tag[data-tag="Marketing"]       { background: #c62828; }
+    .crm-tag[data-tag="Operations"]      { background: #2e7d32; }
+    .crm-tag[data-tag="Admin"]           { background: #ad1457; }
+    .crm-tag[data-tag="Customer"]        { background: #0277bd; }
+    .crm-tag[data-tag="Partner"]         { background: #7cb342; }
+    .crm-tag[data-tag="Urgent"]          { background: #c62828; }
+    .crm-tag[data-tag="Low"]             { background: #90a4ae; color: #fff; }
+    .crm-tag[data-tag="Medium"]          { background: #fbc02d; color: #fff; }
+    .crm-tag[data-tag="High"]            { background: #ef6c00; color: #fff; }
+    #tagFilterDropdown select option { padding: 8px 10px; font-size: 1rem; }
+    #tagFilterDropdown select:focus { border: 1.5px solid var(--primary); outline: none; }
+    #tagFilterDropdown select option:hover { background: #eaf2fb; }
+    /* --- MOBILE RESPONSIVE STYLES --- */
+    @media (max-width: 700px) {
+      html, body, .container { width: 100vw !important; height: 100vh !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; }
+      .sidebar {
+        position: fixed;
+        left: -260px;
+        z-index: 1000;
+        transition: left 0.3s;
+      }
+      .sidebar.show {
+        left: 0;
+      }
+      .send-mail-bar {
+        left: 0 !important;
+        width: 100% !important;
+      }
+      .container { 
+        padding: 4px 2vw 0 2vw !important;
+        margin-top: 4px !important;
+        margin-bottom: 4px !important;
+        border-radius: 10px !important;
+        box-shadow: 0 2px 8px rgba(32,107,196,0.09) !important;
+        min-height: 100vh !important; 
+        max-height: 100vh !important; 
+        display: flex !important; 
+        flex-direction: column !important; 
+        box-sizing: border-box !important; 
+      }
+      #table-container { flex: 1 1 auto !important; min-height: 0 !important; display: flex !important; flex-direction: column !important; padding: 0 !important; margin: 0 !important; }
+      .table-scroll {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important; /* Change from auto to hidden */
+        overflow-y: auto !important;
+      }
+      table {
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        table-layout: auto !important;
+        font-size: .98rem !important;
+      }
+      th, td {
+        white-space: normal !important; /* Allow wrapping */
+        word-break: break-word !important;
+        vertical-align: middle !important;
+        text-overflow: ellipsis !important;
+        overflow: hidden !important;
+        padding: 7px 6px !important;
+        font-size: .98rem !important;
+      }
+      /* Remove or reduce fixed widths on columns */
+      th:nth-child(4), td:nth-child(4),
+      th:nth-child(5), td:nth-child(5),
+      th:nth-child(6), td:nth-child(6) {
+        max-width: unset !important;
+        min-width: unset !important;
+        width: auto !important;
+        font-size: .9rem !important;
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+        text-align: center !important;
+      }
+      th:nth-child(3), td:nth-child(3) {
+        min-width: unset !important;
+        max-width: 100vw !important;
+        width: auto !important;
+        font-size: .98rem !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+      }
+      .crm-tag { font-size: .85rem !important; min-width: 44px !important; padding: 2px 6px !important; margin-right: 3px !important; }
+      .bottom-bar-flex { display: grid; grid-template-columns: 1fr; align-items: center; justify-content: stretch; gap: 8px; position: static; width: 100%; }
+      .bottom-bar-flex .pagination { position: static; margin: 0; font-size: .95rem; text-align: center; width: 100%; min-width: 0; flex: none; justify-content: center; }
+      .bottom-bar-flex #submitBtn { width: 100%; margin: 0; font-size: 1rem; min-height: 36px; padding: 8px 0; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+      #tagFilterDropdown { min-width: 120px !important; max-width: 98vw !important; left: 0 !important; right: auto !important; z-index: 9999 !important; font-size: 1rem !important; padding: 10px 6px !important; }
+      #tagFilterDropdown select { font-size: 1rem !important; width: 100% !important; }
+      #submitBtn { width: auto !important; min-width: 70px !important; font-size: .98rem !important; padding: 8px 16px !important; min-height: 32px !important; border-radius: 6px !important; margin: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; }
+    }
+    @media (max-width: 480px) {
+      .container { padding: 2px 1vw 4px 1vw; }
+      .tab-btn { font-size: .9rem; padding: 4px 4px; min-width: 60px; }
+      .table-scroll { max-height: 160px; }
+      #attachmentModal > div { padding: 4px 1vw; }
+      #attachmentContent img, #attachmentContent iframe { max-width: 99vw; width: 99vw; max-height: 40vh; }
+      .crm-tag { font-size: .85rem; min-width: 40px; padding: 2px 6px; }
+      #submitBtn { width: auto !important; font-size: .98rem !important; padding: 8px 16px !important; min-height: 32px !important; border-radius: 6px !important; display: flex !important; align-items: center !important; gap: 6px !important; }
+    }
+    @media (min-width: 701px) {
+      .table-scroll { max-height: none !important; overflow-y: visible !important; }
+    }
+    /* Animated underline for active tab */
+    .tab-btn.active::after {
+      content: "";
+      display: block;
+      height: 2.5px;
+      background: linear-gradient(90deg, #206bc4 60%, #43a047 100%);
+      border-radius: 2px 2px 0 0;
+      position: absolute;
+      left: 15%;
+      right: 15%;
+      bottom: -2px;
+      animation: underlineGrow 0.35s cubic-bezier(.4,0,.2,1);
+    }
+    .send-btn-custom {
+      background: #e3ecfa;
+      color: #206bc4;
+      font-weight: 600;
+      font-size: 0.97rem;
+      border: none;
+      border-radius: 7px;
+      box-shadow: 0 1px 4px rgba(32,107,196,0.07);
+      padding: 5px 14px;
+      margin: 0 2px;
+      transition: background .18s, color .18s, box-shadow .18s, transform .1s;
+      cursor: pointer;
+      min-width: 60px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .send-btn-mail {
+      background:  #3c98b4 ;
+      color: #fff !important;
+    }
+    .send-btn-mail:hover, .send-btn-mail:focus {
+     background:  #19728d  ;
+      color: #fff !important;
+    }
+
+    .send-btn-whatsapp {
+      background:  #5fc584 ;
+      color: #fff !important;
+    }
+    .send-btn-whatsapp:hover, .send-btn-whatsapp:focus {
+      background:  #0b8f3b ;
+      color: #fff !important;
+    }
+
+    .send-btn-custom i {
+      color: #fff !important;
+    }
+    /* Attachment link style: blue text and underline on hover to match screenshot */
+    .attachment-link {
+      color: var(--primary);
+      text-decoration: none;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .attachment-link:hover,
+    .attachment-link:focus {
+      text-decoration: underline;
+      outline: none;
+    }
+    /* Modal fade/scale animation */
+    #attachmentModal {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s cubic-bezier(.4,0,.2,1);
+    }
+    #attachmentModal.show {
+      opacity: 1;
+      pointer-events: auto;
+      animation: modalFadeIn 0.3s cubic-bezier(.4,0,.2,1);
+    }
+    @keyframes modalSlideIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .attachment-modal-content {
+      transform: scale(0.95);
+      opacity: 0;
+      transition: transform 0.25s cubic-bezier(.4,0,.2,1), opacity 0.25s cubic-bezier(.4,0,.2,1);
+    }
+    #attachmentModal.show .attachment-modal-content {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    /* Animated underline for active tab */
+    .tab-btn.active::after {
+      content: "";
+      display: block;
+      height: 2.5px;
+      background: linear-gradient(90deg, #206bc4 60%, #43a047 100%);
+      border-radius: 2px 2px 0 0;
+      position: absolute;
+      left: 15%;
+      right: 15%;
+      bottom: -2px;
+      animation: underlineGrow 0.35s cubic-bezier(.4,0,.2,1);
+    }
+    @keyframes underlineGrow {
+      from { width: 0; left: 50%; right: 50%; }
+      to   { width: auto; left: 15%; right: 15%; }
+    }
+
+    /* Tag filter dropdown smooth open */
+    #tagFilterDropdown {
+      transition: opacity 0.22s cubic-bezier(.4,0,.2,1), transform 0.22s cubic-bezier(.4,0,.2,1);
+      opacity: 0;
+      transform: translateY(-10px) scale(0.98);
+      pointer-events: none;
+    }
+    #tagFilterDropdown[style*="display: block"] {
+      opacity: 1 !important;
+      transform: translateY(0) scale(1) !important;
+      pointer-events: auto !important;
+    }
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    .main-tabs, .sub-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 0;
+}
+.sub-tabs {
+  margin-left: 0;
+  margin-top: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  gap: 4px;
+  align-items: center;
+  display: flex;
+  border-left: none;
+  border-top: none;
+  width: auto;
+}
+.subtab-btn {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: #64748b;
+  font-size: 0.80rem;
+  font-weight: 500;
+  padding: 8px 12px;
+  margin: 0 2px;
+  cursor: pointer;
+  transition: all .2s;
+  border-bottom: 2px solid transparent;
+  position: relative;
+}
+.subtab-btn:hover {
+  color: var(--primary);
+}
+.subtab-btn.active {
+  background: transparent;
+  color: var(--primary);
+  font-weight: 600;
+  border-bottom: 2px solid var(--primary);
+}
+#sendNow:hover, #sendNow:focus {
+  background: #174ea6;
+  box-shadow: 0 4px 16px rgba(32,107,196,0.18);
+  transform: scale(1.02);
+}
+#sendNow:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+#sendNow:disabled:hover {
+  background: #206bc4;
+  box-shadow: 0 2px 8px rgba(32,107,196,0.13);
+  transform: none !important;
+}
+/* Sidebar Styles */
+.sidebar {
+  width: 260px;
+  min-width: 260px;
+  background-color: #fff;
+  border-right: 1px solid #e5e9f2;
+  color: #334155;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 200vh;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  margin-left: 0;
+}
+.menu-section {
+  margin-bottom: 8px;
+}
+.menu-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  background-color: transparent;
+  border-radius: 0;
+  cursor: pointer;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+  border-bottom: 3px solid transparent;
+  position: relative;
+}
+.menu-header:hover {
+  background-color: #f0f4f8;
+  color: #206bc4;
+}
+.menu-header.active {
+  background-color: transparent;
+  color: #206bc4;
+  border-bottom: 3px solid #206bc4;
+}
+.menu-header .icon {
+  margin-right: 8px;
+  font-size: 1rem;
+}
+.menu-header .arrow {
+  margin-left: auto;
+  font-size: 0.8rem;
+  transition: transform 0.2s;
+}
+.menu-header.collapsed .arrow {
+  transform: rotate(-90deg);
+}
+.submenu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 500px;
+  overflow-y: auto;
+}
+.submenu li {
+  padding: 10px 12px;
+  margin: 2px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s, color 0.2s;
+  position: relative;
+  color: #475569;
+}
+.submenu li:hover {
+  background-color: #f0f4f8;
+  color: #206bc4;
+}
+.submenu li.active {
+  background-color: #dde8f5;
+  color: #206bc4;
+  font-weight: 600;
+}
+.submenu li.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: #206bc4;
+  border-radius: 0 3px 3px 0;
+}
+.submenu-level-2 {
+  padding-left: 20px;
+  margin-top: 4px;
+  display: none;
+}
+.submenu-level-2.show {
+  display: block;
+}
+.submenu-level-2 li {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+.submenu.hidden {
+  display: none !important;
+}
+.submenu-level-2.hidden {
+  display: none !important;
+}
+/* Auto-expand parent when child is active */
+.submenu-item.active > .submenu-level-2 {
+  display: block;
+}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <!-- MF Menu -->
+      <div class="menu-section">
+        <div class="menu-header" id="mf-header" onclick="toggleMainMenu('mf')">
+          <span class="icon"><i class="fa-solid fa-folder"></i></span>
+          <span>MF</span>
+          <span class="arrow" id="mf-arrow">▾</span>
+        </div>
+        <ul class="submenu hidden" id="mf-submenu">
+          <li class="submenu-item" data-main="MF" data-level1="Active" onclick="toggleLevel1Menu(this, 'mf-active-submenu')">
+            Active
+            <ul class="submenu submenu-level-2" id="mf-active-submenu">
+              <li class="submenu-item" data-main="MF" data-level2="Factsheet" onclick="event.stopPropagation(); selectSidebarItem(this, 'MF', 'Active', 'Factsheet')">Factsheet</li>
+              <li class="submenu-item" data-main="MF" data-level2="One Pagers" onclick="event.stopPropagation(); selectSidebarItem(this, 'MF', 'Active', 'One Pagers')">One Pagers</li>
+              <li class="submenu-item" data-main="MF" data-level2="PPT" onclick="event.stopPropagation(); selectSidebarItem(this, 'MF', 'Active', 'PPT')">PPT</li>
+              <li class="submenu-item" data-main="MF" data-level2="Returns Docket" onclick="event.stopPropagation(); selectSidebarItem(this, 'MF', 'Active', 'Returns Docket')">Returns Docket</li>
+              <li class="submenu-item" data-main="MF" data-level2="Sales Deck" onclick="event.stopPropagation(); selectSidebarItem(this, 'MF', 'Active', 'Sales Deck')">Sales Deck</li>
+            </ul>
+          </li>
+          <li class="submenu-item" data-main="MF" data-level1="Passive" onclick="toggleLevel1Menu(this, 'mf-passive-submenu')">
+            Passive
+            <ul class="submenu submenu-level-2 hidden" id="mf-passive-submenu">
+              <li class="submenu-item" data-main="MF" data-level2="Factsheet" onclick="event.stopPropagation(); selectSidebarItem(this, 'MF', 'Passive', 'Factsheet')">Factsheet</li>
+              <li class="submenu-item" data-main="MF" data-level2="One Pagers" onclick="event.stopPropagation(); selectSidebarItem(this, 'MF', 'Passive', 'One Pagers')">One Pagers</li>
+              <li class="submenu-item" data-main="MF" data-level2="PPT" onclick="event.stopPropagation(); selectSidebarItem(this, 'MF', 'Passive', 'PPT')">PPT</li>
+              <li class="submenu-item" data-main="MF" data-level2="Market Report" onclick="event.stopPropagation(); selectSidebarItem(this, 'MF', 'Passive', 'Market Report')">Market Report</li>
+              <li class="submenu-item" data-main="MF" data-level2="Leaflets / Brochures" onclick="event.stopPropagation(); selectSidebarItem(this, 'MF', 'Passive', 'Leaflets / Brochures')">Leaflets / Brochures</li>
+              <li class="submenu-item" data-main="MF" data-level2="Score Card" onclick="event.stopPropagation(); selectSidebarItem(this, 'MF', 'Passive', 'Score Card')">Score Card</li>
+              <li class="submenu-item" data-main="MF" data-level2="Performance" onclick="event.stopPropagation(); selectSidebarItem(this, 'MF', 'Passive', 'Performance')">Performance</li>
+              <li class="submenu-item" data-main="MF" data-level2="How to use factors" onclick="event.stopPropagation(); selectSidebarItem(this, 'MF', 'Passive', 'How to use factors')">How to use factors</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <!-- PMS Menu -->
+      <div class="menu-section">
+        <div class="menu-header" id="pms-header" onclick="toggleMainMenu('pms')">
+          <span class="icon"><i class="fa-solid fa-folder"></i></span>
+          <span>PMS</span>
+          <span class="arrow" id="pms-arrow">▾</span>
+        </div>
+        <ul class="submenu hidden" id="pms-submenu">
+          <li class="submenu-item" data-main="PMS" data-level2="Document Disclosure" onclick="event.stopPropagation(); selectSidebarItem(this, 'PMS', null, 'Document Disclosure')">Document Disclosure</li>
+          <li class="submenu-item" data-main="PMS" data-level2="Forms" onclick="event.stopPropagation(); selectSidebarItem(this, 'PMS', null, 'Forms')">Forms</li>
+          <li class="submenu-item" data-main="PMS" data-level2="Leaflets / Brochures" onclick="event.stopPropagation(); selectSidebarItem(this, 'PMS', null, 'Leaflets / Brochures')">Leaflets / Brochures</li>
+          <li class="submenu-item" data-main="PMS" data-level2="Monthly Communication" onclick="event.stopPropagation(); selectSidebarItem(this, 'PMS', null, 'Monthly Communication')">Monthly Communication</li>
+          <li class="submenu-item" data-main="PMS" data-level2="Presentations" onclick="event.stopPropagation(); selectSidebarItem(this, 'PMS', null, 'Presentations')">Presentations</li>
+        </ul>
+      </div>
+      <!-- AIF Menu -->
+      <div class="menu-section">
+        <div class="menu-header" id="aif-header" onclick="toggleMainMenu('aif')">
+          <span class="icon"><i class="fa-solid fa-folder"></i></span>
+          <span>AIF</span>
+          <span class="arrow" id="aif-arrow">▾</span>
+        </div>
+        <ul class="submenu hidden" id="aif-submenu">
+          <li class="submenu-item" data-main="AIF" data-level2="One Pagers" onclick="event.stopPropagation(); selectSidebarItem(this, 'AIF', null, 'One Pagers')">One Pagers</li>
+          <li class="submenu-item" data-main="AIF" data-level2="PPT" onclick="event.stopPropagation(); selectSidebarItem(this, 'AIF', null, 'PPT')">PPT</li>
+          <li class="submenu-item" data-main="AIF" data-level2="AIF Returns & Portfolios" onclick="event.stopPropagation(); selectSidebarItem(this, 'AIF', null, 'AIF Returns & Portfolios')">AIF Returns & Portfolios</li>
+          <li class="submenu-item" data-main="AIF" data-level2="AIF PPM" onclick="event.stopPropagation(); selectSidebarItem(this, 'AIF', null, 'AIF PPM')">AIF PPM</li>
+          <li class="submenu-item" data-main="AIF" data-level2="AIF Form" onclick="event.stopPropagation(); selectSidebarItem(this, 'AIF', null, 'AIF Form')">AIF Form</li>
+          <li class="submenu-item" data-main="AIF" data-level2="AIF Master" onclick="event.stopPropagation(); selectSidebarItem(this, 'AIF', null, 'AIF Master')">AIF Master</li>
+          <li class="submenu-item" data-main="AIF" data-level2="Quarterly Insights" onclick="event.stopPropagation(); selectSidebarItem(this, 'AIF', null, 'Quarterly Insights')">Quarterly Insights</li>
+        </ul>
+      </div>
+    </div>
+    <!-- Main Content -->
+    <div class="main-content-wrapper">
+      <header class="w-full bg-white/90 backdrop-blur border-b border-line sticky top-0 z-30">
+        <div class="mx-auto max-w-none px-4 py-3">
+          <!-- Single Row: Search and Filters -->
+          <div class="flex items-end gap-6">
+            <!-- Search Input -->
+            <input id="searchInput" type="text" placeholder="Search..." class="flex-1 rounded-md border border-line bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+            
+            <!-- Year Filter -->
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium text-slate-500">Select Year</label>
+              <select id="yearFilter" class="min-w-[90px] rounded-md border border-line bg-white px-2 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none bg-no-repeat pr-8" style="background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23206bc4%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3e%3cpolyline points=%226 9 12 15 18 9%22%3e%3c/polyline%3e%3c/svg%3e'); background-position: right 6px center; background-size: 16px;">
+                <option value="">All</option>
+              </select>
+            </div>
+            
+            <!-- Month Filter -->
+            <div class="flex flex-col gap-0.5">
+              <label class="text-xs font-medium text-slate-500">Select Month</label>
+              <select id="monthFilter" class="min-w-[110px] rounded-md border border-line bg-white px-2 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none bg-no-repeat pr-8" style="background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23206bc4%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3e%3cpolyline points=%226 9 12 15 18 9%22%3e%3c/polyline%3e%3c/svg%3e'); background-position: right 6px center; background-size: 16px;">
+                <option value="">All</option>
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+            </div>
+            
+            <!-- Tags Filter -->
+            <!-- <div class="relative ml-auto" id="tagWrap">
+              <button id="tagBtn" class="inline-flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-sm hover:bg-slate-50 transition-colors h-9">
+                <i class="fa-solid fa-filter text-primary"></i>
+                <span id="tagLbl">Tags</span>
+              </button>
+              <div id="tagDd" class="hidden absolute right-0 mt-2 w-56 rounded-lg border border-line bg-white p-3 shadow-soft z-50">
+                <div class="text-sm font-medium mb-2">Filter by tag</div>
+                <input id="tagSearch" type="text" placeholder="Search tags..." class="w-full rounded-md border border-line bg-slate-50 px-2 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                <select id="tagSel" class="w-full rounded-md border border-line bg-slate-50 px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"></select>
+                <div class="flex justify-between mt-2 text-xs">
+                  <button id="tagClear" class="text-rose-600 hover:underline">Clear</button>
+                  <button id="tagApply" class="text-primary hover:underline">Apply</button>
+                </div>
+              </div>
+            </div> -->
+          </div>
+        </div>
+      </header>
+      <div id="table-container">Loading...</div>
+      <div class="send-mail-bar" id="send-mail-bar">
+        <button id="submitBtn">Send Mail</button>
+      </div>
+    </div>
+  </div>
+  <div id="attachmentModal">
+    <div class="attachment-modal-content">
+      <button id="closeAttachmentModal" class="close-modal-btn">&times;</button>
+      <div id="attachmentContent"></div>
+    </div>
+  </div>
+  <script>
+let CURRENT_MODULE = null;
+let CURRENT_RECORD_ID = null;
+
+ZOHO.embeddedApp.on("PageLoad", function (data) {
+  CURRENT_MODULE = data.Entity;
+  CURRENT_RECORD_ID = Array.isArray(data.EntityId)
+    ? data.EntityId[0]
+    : data.EntityId;
+});
+    const tagColors = [
+      "#1976d2", "#43a047", "#f9a825", "#d32f2f", "#8e24aa", "#00838f", "#6d4c41",
+      "#3949ab", "#e65100", "#c62828", "#2e7d32", "#ad1457", "#0277bd", "#7cb342",
+      "#fbc02d", "#ef6c00", "#455a64", "#90a4ae"
+    ];
+    const tagColorMap = {};
+    function getTagColor(tagName) {
+      if (!tagName) return tagColors[0];
+      if (!tagColorMap[tagName]) {
+        const idx = Object.keys(tagColorMap).length % tagColors.length;
+        tagColorMap[tagName] = tagColors[idx];
+      }
+      return tagColorMap[tagName];
+    }
+    
+    // Color / tag utilities (ported & expanded from knowledge.html)
+    function hexToRgb(hex) {
+      hex = String(hex || "").trim();
+      if (!hex) return null;
+      if (hex[0] === "#") hex = hex.slice(1);
+      if (hex.length === 3)
+        hex = hex
+          .split("")
+          .map((x) => x + x)
+          .join("");
+      if (hex.length !== 6) return null;
+      const num = parseInt(hex, 16);
+      return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+    }
+    function rgba(hex, a = 1) {
+      const c = hexToRgb(hex);
+      if (!c) return null;
+      return `rgba(${c.r}, ${c.g}, ${c.b}, ${a})`;
+    }
+    function textColorForBg(hex) {
+      const c = hexToRgb(hex);  
+      if (!c) return "#0f172a";
+      const yiq = (c.r * 299 + c.g * 587 + c.b * 114) / 1000;
+      return yiq >= 140 ? "#0f172a" : "#ffffff";
+    }
+    const WARM_COLORS = [
+      "#f43f5e",
+      "#fb923c",
+      "#f59e0b",
+      "#eab308",
+      "#f97316",
+      "#ef4444",
+      "#f472b6",
+      "#fda4af",
+      "#fdba74",
+      "#facc15",
+    ];
+    const tagColorCache = new Map();
+    function warmColorFor(name) {
+      if (!name) return "#f59e0b";
+      if (tagColorCache.has(name)) return tagColorCache.get(name);
+      let h = 0;
+      for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+      const color = WARM_COLORS[h % WARM_COLORS.length];
+      tagColorCache.set(name, color);
+      return color;
+    }
+    // Normalize tag data into [{name,color}]
+    function getTagsData(r) {
+      const out = [];
+      const push = (obj) => {
+        if (!obj) return;
+        const name =
+          obj.Name || obj.name || obj.label || obj.tag || (typeof obj === "string" ? obj : "");
+        if (!name) return;
+        const rawColor = obj.color || obj.Color || obj.colour || obj.color_code || obj.hex || null;
+        const color = rawColor || warmColorFor(name);
+        out.push({ name, color });
+      };
+      if (Array.isArray(r.Tag)) r.Tag.forEach(push);
+      else if (r.Tag && typeof r.Tag === "object") push(r.Tag);
+      else if (r.Tag) push(String(r.Tag));
+      return out;
+    }
+    function firstAtt(r) {
+      return Array.isArray(r.Attachment) && r.Attachment.length ? r.Attachment[0] : null;
+    }
+    function hostJoin(url) {
+      if (!url) return null;
+      if (/^https?:\/\//.test(url)) return url;
+      // Fallback to current Zoho base used in this widget (keep same host as existing init)
+      // Use origin when path is absolute; otherwise return as-is
+      return url.startsWith("/") ? window.location.origin + url : url;
+    }
+    function canPreview(att) {
+      if (!att) return false;
+      const ext = (att.extn || "").toLowerCase();
+      const mode = (att.mode || "").toLowerCase();
+      if (mode === "sheet") return false;
+      const viewable = ["pdf", "jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"];
+      return viewable.includes(ext) || !!att.preview_Url;
+    }
+    // Ensure crm-tag text has readable contrast and set the --tag-color for the ::after triangle
+    function updateCrmTagContrast() {
+      function parseRgbString(rgb) {
+        if (!rgb) return null;
+        const m = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+        if (!m) return null;
+        return { r: +m[1], g: +m[2], b: +m[3] };
+      }
+      function rgbToHex(c) {
+        if (!c) return null;
+        const toHex = v => (v < 16 ? '0' : '') + v.toString(16);
+        return `#${toHex(c.r)}${toHex(c.g)}${toHex(c.b)}`;
+      }
+      function contrastColorFromRgb(c) {
+        if (!c) return '#0f172a';
+        const yiq = (c.r * 299 + c.g * 587 + c.b * 114) / 1000;
+        return yiq >= 140 ? '#0f172a' : '#ffffff';
+      }
+      document.querySelectorAll('.crm-tag').forEach(el => {
+        const cs = window.getComputedStyle(el);
+        let bg = cs.backgroundColor || cs.getPropertyValue('background-color');
+        // If background is transparent, try to read data attribute style or var
+        if (!bg || bg === 'transparent') { 
+          const dataBg = el.getAttribute('data-bg');
+          if (dataBg) bg = dataBg;
+        }
+        const rgb = parseRgbString(bg);
+        const hex = rgb ? rgbToHex(rgb) : null;
+        const fg = rgb ? contrastColorFromRgb(rgb) : '#0f172a';
+        // apply computed foreground and set CSS variable for triangle color
+        el.style.color = fg;
+        if (hex) el.style.setProperty('--tag-color', hex);
+      });
+    }
+    let allData = [];
+    let currentPage = 1;
+    const pageSize = 10;
+    let currentTab = "";
+    let currentLevel1 = null; // For MF: "Active" or "Passive"
+    let currentSubTab = ""; // The actual subtype selected
+    let currentYear = ""; // Filter by year
+    let currentMonth = ""; // Filter by month
+
+// Sidebar navigation functions
+function toggleMainMenu(menuType) {
+  // Remove active state from all headers
+  document.querySelectorAll('.menu-header').forEach(header => {
+    header.classList.remove('active');
+  });
+  
+  // Toggle the clicked menu
+  const header = document.getElementById(menuType + '-header');
+  const submenu = document.getElementById(menuType + '-submenu');
+  const arrow = document.getElementById(menuType + '-arrow');
+  
+  if (submenu.classList.contains('hidden')) {
+    // Show this menu and hide others
+    document.querySelectorAll('.submenu').forEach(menu => {
+      menu.classList.add('hidden');
+    });
+    submenu.classList.remove('hidden');
+    header.classList.add('active');
+    arrow.textContent = '▾';
+    
+    // Close all level 1 menus in other sections
+    document.querySelectorAll('.submenu-level-2').forEach(level2 => {
+      level2.classList.add('hidden');
+    });
+  } else {
+    // Close this menu
+    submenu.classList.add('hidden');
+    header.classList.remove('active');
+    arrow.textContent = '▸';
+  }
+}
+
+function toggleLevel1Menu(element, submenuId) {
+  const submenu = document.getElementById(submenuId);
+  
+  // Close all other level 1 menus in the same parent
+  const parentMenu = element.closest('.submenu');
+  parentMenu.querySelectorAll('.submenu-level-2').forEach(menu => {
+    if (menu.id !== submenuId) {
+      menu.classList.add('hidden');
+    }
+  });
+  
+  // Remove active from siblings
+  Array.from(element.parentElement.children).forEach(sibling => {
+    if (sibling !== element) {
+      sibling.classList.remove('active');
+    }
+  });
+  
+  // Toggle this menu
+  if (submenu.classList.contains('hidden')) {
+    submenu.classList.remove('hidden');
+    element.classList.add('active');
+  } else {
+    submenu.classList.add('hidden');
+    element.classList.remove('active');
+  }
+}
+function getEmailFromRecord(record) {
+  const possibleKeys = Object.keys(record);
+
+  // priority order
+  const emailKeys = possibleKeys.filter(k =>
+    k.toLowerCase().includes("email")
+  );
+
+  for (let key of emailKeys) {
+    if (record[key]) return record[key];
+  }
+
+  return null;
+}
+
+function extractEmail(record) {
+  for (let key in record) {
+    if (
+      key.toLowerCase().includes("email") &&
+      typeof record[key] === "string" &&
+      record[key].includes("@")
+    ) {
+      return record[key];
+    }
+  }
+  return null;
+}
+
+function selectSidebarItem(element, mainTab, level1, level2) {
+  // Find parent level 1 item if this is a level 2 item
+  let parentItem = null;
+  if (level2 && level1) {
+    parentItem = element.closest('.submenu-item[data-level1]');
+  }
+  
+  console.log('element:', element);
+  console.log('level2:', level2);
+  console.log('level1:', level1);
+  console.log('parentItem:', parentItem);
+  
+  // Remove active state from all sidebar items EXCEPT the parent level 1 item
+  document.querySelectorAll('.submenu-item').forEach(item => {
+
+    if (parentItem && item === parentItem) {
+      // Keep parent active   
+      return;
+    }else{
+
+    item.classList.remove('active');
+    }
+  });
+  
+  // Add active state to clicked item
+  element.classList.add('active');
+  
+  // If this is a level 2 item, ensure parent level 1 item is also active and expanded
+  if (parentItem && parentItem !== element) {
+    parentItem.classList.add('active');
+    // Ensure the level 2 submenu is visible
+    const level2Menu = parentItem.querySelector('.submenu-level-2');
+    console.log('parentItem HTML:', parentItem.innerHTML);
+    console.log('level2Menu:', level2Menu);
+    if (level2Menu) {
+      level2Menu.classList.remove('hidden');
+    }
+  }
+  
+  // Update global variables
+  currentTab = mainTab;
+  currentLevel1 = level1 || null;
+  currentSubTab = level2 || level1 || '';
+  
+  currentPage = 1;
+  filterAndRender();
+}
+
+function getCurrentUserEmail(userResp) {
+  if (!userResp) return null;
+  if (userResp.email) return userResp.email;
+  if (Array.isArray(userResp.users) && userResp.users.length) {
+    return userResp.users[0].email;
+  }
+  return null;
+}
+
+// Initialize sidebar on page load — do not auto-select any menu
+document.addEventListener('DOMContentLoaded', function () {
+
+  const mailModal = document.getElementById('mailModal');
+  const closeBtn = document.getElementById('closeMailModal');
+  const cancelBtn = document.getElementById('cancelMail');
+  const sendBtn = document.getElementById('sendNow');
+  const submitBtn = document.getElementById('submitBtn');
+
+  function closeMailPopup() {
+    mailModal.classList.add('hidden');
+  }
+
+  closeBtn.onclick = closeMailPopup;
+  cancelBtn.onclick = closeMailPopup;
+
+  submitBtn.onclick = function () {
+    if (submitBtn.disabled) return;
+
+    const items = getSelectedRecords();
+    if (!items.length) {
+      alert('Please select one record');
+      return;
+    }
+
+    const record = items[0];
+    const att = firstAtt(record);
+
+    document.getElementById('mailTitle').innerText = record.Name || '';
+    document.getElementById('mailDescription').innerText = record.Description || '';
+
+    document.getElementById('mailAttachment').innerHTML =
+      att && att.download_Url
+        ? `<a href="#" class="attachment-link" onclick="showAttachment('${record.id}')">
+            ${att.file_name || 'View Attachment'}
+          </a>`
+        : `<span style="color:#b23c3c">No attachment found</span>`;
+
+    mailModal.classList.remove('hidden');
+  };
+
+sendBtn.onclick = async function () {
+  if (!CURRENT_MODULE || !CURRENT_RECORD_ID) {
+    alert("Unable to determine record context");
+    return;
+  }
+
+  const items = getSelectedRecords();
+  if (!items.length) {
+    alert("Please select a Knowledge Base record");
+    return;
+  }
+
+  const kbRecord = items[0]; // ✅ ACTUAL Knowledge_Base record
+  const kbId = kbRecord.id;
+
+  sendBtn.disabled = true;
+  sendBtn.innerText = "Sending...";
+
+  try {
+    const funcArgs = {
+      arguments: JSON.stringify({
+        entityName: CURRENT_MODULE,
+        entityId: CURRENT_RECORD_ID,
+        kbId: kbId
+      })
+    };
+
+    console.log("Calling sendKnowledgeBaseEmail with:", funcArgs);
+
+    const response = await ZOHO.CRM.FUNCTIONS.execute(
+      "sendKnowledgeBaseEmail",
+      funcArgs
+    );
+
+    console.log("Function response:", response);
+
+    // Allow sending email even if attachment is not found
+    if (response?.details?.output?.includes("Error")) {
+      // Only throw error if it's not about missing attachment
+      if (!response.details.output.includes("No attachment")) {
+        throw new Error(response.details.output);
+      }
+      // If it's just missing attachment, continue - email can be sent without attachment
+    }
+
+    alert("Email sent successfully!");
+    document.getElementById("mailModal").classList.add("hidden");
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to send email: " + err.message);
+  } finally {
+    sendBtn.disabled = false;
+    sendBtn.innerText = "Send";
+  }
+};
+
+
+// Standalone Function: Send Email using Zoho CRM Functions
+async function sendKnowledgeBaseEmail(module, recordId, subject, content) {
+  try {
+    // Get current user and record data
+    const [userResp, recRes] = await Promise.all([
+      ZOHO.CRM.CONFIG.getCurrentUser(),
+      ZOHO.CRM.API.getRecord({
+        Entity: module,
+        RecordID: recordId
+      })
+    ]);
+
+    const fullRecord = recRes?.data?.[0];
+    if (!fullRecord) throw new Error("Unable to fetch record");
+
+    // Get sender email
+    const fromEmail = userResp.email || (userResp.users && userResp.users[0]?.email);
+    if (!fromEmail) throw new Error("Unable to fetch user email");
+
+    // Extract recipient email from record
+    let toEmail = null;
+    for (let key in fullRecord) {
+      if (
+        key.toLowerCase().includes("email") &&
+        typeof fullRecord[key] === "string" &&
+        fullRecord[key].includes("@")
+      ) {
+        toEmail = fullRecord[key];
+        break;
+      }
+    }
+
+    if (!toEmail) throw new Error("No email address found in record");
+
+    console.log("Calling standalone function with:", { currentModule: module, currentRecordId: CURRENT_RECORD_ID, knowledgeBaseRecordId: recordId });
+
+    // Execute standalone function
+    const func_details = {
+      "arguments": JSON.stringify({
+        "entityName": module,
+        "entityid": CURRENT_RECORD_ID,
+        "kbid": recordId
+      })
+    };
+
+    console.log("Calling Function 'sendKnowledgeBaseEmail' with:", func_details);
+
+    // Execute the Function
+    const response = await ZOHO.CRM.FUNCTIONS.execute("sendKnowledgeBaseEmail", func_details);
+
+    console.log("Function Response Raw:", response);
+
+    // Handle Response Logic
+    if (response && response.code === "success") {
+      const outputMessage = response.details.output;
+      
+      if (outputMessage.includes("Error")) {
+        throw new Error("Function Error: " + outputMessage);
+      } else {
+        console.log("Email sent successfully via standalone function");
+        return response;
+      }
+    } else {
+      throw new Error("Failed to execute CRM Function: " + (response?.message || "Unknown error"));
+    }
+  } catch (error) {
+    console.error("Critical Error calling CRM Function:", error);
+    throw error;
+  }
+}
+});
+
+// Update filterAndRender to also filter by subtab
+function filterAndRender() {
+  const val = document.getElementById('searchInput').value.toLowerCase();
+  let filtered = allData.filter(r =>
+    (r.Name && r.Name.toLowerCase().includes(val)) ||
+    (r.Description && r.Description.toLowerCase().includes(val))
+  );
+  
+  // Filter by main tab
+  filtered = filtered.filter(r => r.Type === currentTab);
+  
+  // For MF, also filter by MF_Category (Active/Passive) if set
+  if (currentTab === 'MF' && currentLevel1) {
+    filtered = filtered.filter(r => {
+      // Use the MF_Category field which contains Active/Passive values
+      const mfCategory = r.MF_Category || '';
+      // Case-insensitive comparison for robustness
+      return mfCategory === currentLevel1 || mfCategory.toLowerCase() === currentLevel1.toLowerCase();
+    });
+  }
+  
+  // Filter by Sub_Type (Factsheet, One Pagers, etc.)
+  if (currentSubTab) {
+    filtered = filtered.filter(r => r.Sub_Type === currentSubTab);
+  }
+  
+  // const selectedTag = window.selectedTagFilter || "";
+  // if (selectedTag) {
+  //   filtered = filtered.filter(r => {
+  //     if (Array.isArray(r.Tag)) {
+  //       return r.Tag.some(tagObj => (tagObj.Name || tagObj.name || tagObj.label) === selectedTag);
+  //     }
+  //     return r.Tag === selectedTag;
+  //   });
+  // }
+  
+  // Filter by Year and Month based on Created_Time field
+  if (currentYear || currentMonth) {
+    filtered = filtered.filter(r => {
+      if (!r.Created_Time) return false;
+      
+      // Parse the created time (assuming format like "2025-01-15T10:30:00")
+      const createdDate = new Date(r.Created_Time);
+      if (isNaN(createdDate.getTime())) return false;
+      
+      const recordYear = createdDate.getFullYear().toString();
+      const recordMonth = (createdDate.getMonth() + 1).toString();
+      
+      // Check year filter
+      if (currentYear && recordYear !== currentYear) {
+        return false;
+      }
+      
+      // Check month filter
+      if (currentMonth && recordMonth !== currentMonth) {
+        return false;
+      }
+      
+      return true;
+    });
+  }
+  
+  renderTable(filtered);
+}
+
+    document.addEventListener('DOMContentLoaded', function() {
+      ZOHO.embeddedApp.init().then(function() {
+        ZOHO.CRM.UI.Resize({height:"600",width:"1100"}).then(function(data){
+          console.log(data);
+        });
+        ZOHO.CRM.API.getAllRecords({
+          Entity: "Knowledge_Base",
+          sort_order: "asc",
+          per_page: 100,
+          page: 1
+        }).then(function(response){
+          let data = response.data || [];
+          allData = data;
+          
+          // Populate year dropdown from Created_Time field
+          const yearsSet = new Set();
+          allData.forEach(record => {
+            if (record.Created_Time) {
+              const year = new Date(record.Created_Time).getFullYear();
+              yearsSet.add(year.toString());
+            }
+          });
+          const yearFilter = document.getElementById('yearFilter');
+          if (yearFilter) {
+            let years = Array.from(yearsSet).sort((a, b) => b - a); // Sort descending
+            
+            // Ensure at least 4 years by adding adjacent years if needed
+            if (years.length < 4) {
+              const currentYear = new Date().getFullYear();
+              const yearsToAdd = new Set(years.map(y => parseInt(y)));
+              
+              // Add previous and next years to reach at least 4
+              for (let i = currentYear; yearsToAdd.size < 4 && i >= currentYear - 10; i--) {
+                yearsToAdd.add(i);
+              }
+              years = Array.from(yearsToAdd).map(y => y.toString()).sort((a, b) => b - a);
+            }
+            
+            years.forEach(year => {
+              const option = document.createElement('option');
+              option.value = year;
+              option.textContent = year;
+              yearFilter.appendChild(option);
+            });
+          }
+          
+          // Add event listeners for year and month filters
+          const monthFilter = document.getElementById('monthFilter');
+          if (yearFilter) {
+            yearFilter.addEventListener('change', function() {
+              currentYear = this.value;
+              currentPage = 1;
+              filterAndRender();
+            });
+          }
+          if (monthFilter) {
+            monthFilter.addEventListener('change', function() {
+              currentMonth = this.value;
+              currentPage = 1;
+              filterAndRender();
+            });
+          }
+          
+          // Auto-select first item after data loads if nothing is selected
+          if (!currentSubTab) {
+            const firstItem = document.querySelector('[data-main="MF"][data-level1="Active"] [data-level2="Factsheet"]');
+            if (firstItem) {
+              selectSidebarItem(firstItem, 'MF', 'Active', 'Factsheet');
+            }
+          } else {
+            filterAndRender();
+          }
+          document.getElementById('searchInput').addEventListener('input', function() {
+            currentPage = 1;
+            filterAndRender();
+          });
+          
+          // Setup tag button handlers
+          // const tagBtn = document.getElementById('tagBtn');
+          // const tagDd = document.getElementById('tagDd');
+          // const tagSel = document.getElementById('tagSel');
+          // const tagSearch = document.getElementById('tagSearch');
+          // const tagClear = document.getElementById('tagClear');
+          // const tagApply = document.getElementById('tagApply');
+          
+          // if (tagBtn && tagDd) {
+          //   tagBtn.addEventListener('click', function(e) {
+          //     e.stopPropagation();
+          //     tagDd.classList.toggle('hidden');
+          //     if (!tagDd.classList.contains('hidden') && tagSel) {
+          //       tagSel.value = window.selectedTagFilter || "";
+          //     }
+          //   });
+            
+          //   document.addEventListener('click', function(e) {
+          //     if (!tagDd.classList.contains('hidden') && !tagDd.contains(e.target) && e.target !== tagBtn) {
+          //       tagDd.classList.add('hidden');
+          //     }
+          //   });
+          // }
+          
+          // if (tagClear) {
+          //   tagClear.addEventListener('click', function(e) {
+          //     e.preventDefault();
+          //     window.selectedTagFilter = "";
+          //     if (tagSel) tagSel.value = "";
+          //     if (tagSearch) tagSearch.value = "";
+          //     tagDd.classList.add('hidden');
+          //     filterAndRender();
+          //   });
+          // }
+          
+          // if (tagApply) {
+          //   tagApply.addEventListener('click', function(e) {
+          //     e.preventDefault();
+          //     if (tagSel) {
+          //       window.selectedTagFilter = tagSel.value;
+          //     }
+          //     tagDd.classList.add('hidden');
+          //     filterAndRender();
+          //   });
+          // }
+          
+          // if (tagSearch && tagSel) {
+          //   tagSearch.addEventListener('input', function() {
+          //     const searchTerm = this.value.toLowerCase();
+          //     const options = tagSel.querySelectorAll('option');
+          //     options.forEach(opt => {
+          //       if (opt.value === '') {
+          //         opt.style.display = '';
+          //       } else {
+          //         opt.style.display = opt.text.toLowerCase().includes(searchTerm) ? '' : 'none';
+          //       }
+          //     });
+          //   });
+          // }
+        }).catch(function(error){
+          document.getElementById('table-container').innerHTML = "Error fetching data.";
+        });
+        // Ensure widget doesn't auto-scroll to bottom on first open
+        setTimeout(function(){
+          try { window.scrollTo && window.scrollTo(0,0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; } catch(e){}
+        }, 50);
+      }).catch(function(err) {
+        document.getElementById('table-container').innerHTML = "Failed to initialize Zoho widget.<br>" + (err && err.message ? err.message : "");
+      });
+    });
+          function getSelectedRecords() {
+        const ids = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.getAttribute('data-id'));
+        return allData.filter(r => ids.includes(String(r.id)));
+      }
+    function renderTable(data) {
+      const isFAQ = currentTab === "FAQ";
+      const columns = [
+        ...(currentTab !== "FAQ" ? [{ label: "", key: "checkbox", render: r => `<input type="checkbox" class="row-checkbox" data-id="${r.id}">` }] : []),
+        { label: isFAQ ? "Question" : "Title", key: "Name" },
+        { label: isFAQ ? "Answer" : "Description", key: "Description", render: r => getDescriptionHtml(r.Description, r.id) },
+        { label: "Attachment Type", key: "Attachment_Type", render: r => {
+          // Display Attachment_Type field directly
+          const attachmentType = r.Attachment_Type || r.AttachmentType || "";
+          return attachmentType ? escapeHtml(attachmentType) : "";
+        }},
+        { label: "Attachment", key: "Attachment", render: r => {
+          const att = firstAtt(r);
+          if (!att) return `<span style="color:#b23c3c;font-weight:500;">No attachment Found</span>`;
+          const dl = hostJoin(att.download_Url);
+          const pv = hostJoin(att.preview_Url);
+          // If preview is available (or file type is viewable) show a View action that uses the preview URL.
+          if (canPreview(att) && (pv || dl))
+            return `<a href="#" class="attachment-link view-attachment" data-id="${r.id}">View</a>`;
+          // For download: call the same showAttachment flow but request a download so Zoho auth/presigned URL is used
+          if (dl)
+            return `<a href="#" class="attachment-link download-attachment" data-id="${r.id}">Download</a>`;
+          return `<span style="color:#b23c3c;font-weight:500;">No attachment Found</span>`;
+        }}
+      ];
+      const totalPages = Math.ceil(data.length / pageSize) || 1;
+      const start = (currentPage - 1) * pageSize;
+      const pageData = data.slice(start, start + pageSize);
+      // let allTags = [];
+      // allData.forEach(r => {
+      //   if (Array.isArray(r.Tag)) {
+      //     r.Tag.forEach(tagObj => {
+      //       const tagName = tagObj.Name || tagObj.name || tagObj.label || "";
+      //       if (tagName && !allTags.includes(tagName)) allTags.push(tagName);
+      //     });
+      //   } else if (r.Tag && !allTags.includes(r.Tag)) {
+      //     allTags.push(r.Tag);
+      //   }
+      // });
+      // allTags.sort();
+      
+      // // Populate tag dropdown
+      // const tagSel = document.getElementById('tagSel');
+      // if (tagSel) {
+      //   tagSel.innerHTML = `<option value="">All Tags</option>${allTags.map(tag => `<option value="${escapeHtml(tag)}">${escapeHtml(tag)}</option>`).join('')}`;
+      // }
+      
+      // Check if data is empty and display "Not Found" message
+      if (data.length === 0) {
+        document.getElementById('table-container').innerHTML = `
+          <div style="padding: 10px; margin: 10px; background-color: #f8d7da; border: 1px solid #fbcfe8; border-radius: 6px; color: #991c24; font-weight: 500; text-align: center;">
+            Not found
+          </div>
+        `;
+      } else {
+        let table = `<div class="table-scroll"><table>
+          <colgroup>
+            ${currentTab !== "FAQ" ? '<col style="width:4%">' : ''}
+            <col style="width:16%">
+            <col style="width:38%">
+            <col style="width:13%">
+            <col style="width:13%">
+          </colgroup>
+          <tr>${columns.map(col => `<th>${col.label}</th>`).join('')}</tr>`;
+        pageData.forEach(record => {
+          table += `<tr>${columns.map(col => {
+            if (col.key === "Description") {
+              return `<td class="description-cell">${col.render ? col.render(record) : (record[col.key] || "")}</td>`;
+            } else {
+              return `<td>${col.render ? col.render(record) : (record[col.key] || "")}</td>`;
+            }
+          }).join('')}</tr>`;
+        });
+        table += `</table></div>`;
+        document.getElementById('table-container').innerHTML = table;
+      }
+  // fix contrast for any crm-tag elements that may be present in the rendered table
+  try { updateCrmTagContrast(); } catch (e) { /* ignore */ }
+      
+      // Pagination and send mail bar - update only pagination, preserve the button
+      const sendMailBar = document.getElementById('send-mail-bar');
+      let bottomBarFlex = sendMailBar.querySelector('.bottom-bar-flex');
+      if (!bottomBarFlex) {
+        // If .bottom-bar-flex doesn't exist, create it with pagination only
+        bottomBarFlex = document.createElement('div');
+        bottomBarFlex.className = 'bottom-bar-flex';
+        sendMailBar.insertBefore(bottomBarFlex, sendMailBar.firstChild);
+      }
+      // Update or create pagination
+      let paginationDiv = bottomBarFlex.querySelector('.pagination');
+      if (!paginationDiv) {
+        paginationDiv = document.createElement('div');
+        paginationDiv.className = 'pagination';
+        bottomBarFlex.insertBefore(paginationDiv, bottomBarFlex.firstChild);
+      }
+      paginationDiv.innerHTML = `
+        <button id="prevPage" ${currentPage === 1 ? "disabled" : ""}>Prev</button>
+        <span>Page ${currentPage} of ${totalPages}</span>
+        <button id="nextPage" ${currentPage === totalPages ? "disabled" : ""}>Next</button>
+      `;
+  // Always show the send mail bar so users can access Send Mail from any tab
+  sendMailBar.style.display = "";
+      document.getElementById('prevPage').onclick = function() {
+        if (currentPage > 1) {
+          currentPage--;
+          renderTable(data);
+        }
+      };
+      document.getElementById('nextPage').onclick = function() {
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderTable(data);
+        }
+      };
+      const sendBtn = document.getElementById('sendBtn');
+      const sendDropdown = document.getElementById('sendDropdown');
+      if (sendBtn && sendDropdown) {
+        sendBtn.onclick = function(e) {
+          e.stopPropagation();
+          sendDropdown.style.display = sendDropdown.style.display === "block" ? "none" : "block";
+        };
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', function hideDropdown(e) {
+          if (sendDropdown.style.display === "block" && !sendDropdown.contains(e.target) && e.target !== sendBtn) {
+            sendDropdown.style.display = "none";
+          }
+        });
+        document.getElementById('sendByMail').onclick = function() {
+          const checked = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.getAttribute('data-id'));
+          alert("Send by Mail:\n" + checked.join(", "));
+        };
+        document.getElementById('sendByWhatsApp').onclick = function() {
+          const checked = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.getAttribute('data-id'));
+          alert("Send by WhatsApp:\n" + checked.join(", "));
+        };
+      }
+      const submitBtn = document.getElementById('submitBtn');
+      // Mail modal wiring: enable send when rows checked and open preview
+      const mailModal = document.getElementById('mailModal');
+      const mailPreview = document.getElementById('mailPreview');
+      const mailSubject = document.getElementById('mailSubject');
+      const closeMailModal = document.getElementById('closeMailModal');
+      const cancelMail = document.getElementById('cancelMail');
+      const sendNow = document.getElementById('sendNow');
+
+      function buildMailPreview(items) {
+        if (!items || !items.length) return '<div style="color:#6b7280">No items selected.</div>';
+        return items.map(it => `<div style="border-bottom:1px solid #eef2f7;padding:8px 0"><div style="font-weight:600">${escapeHtml(it.Name)}</div><div style="color:#475569">${escapeHtml(it.Description || '')}</div></div>`).join('');
+      }
+
+      // update send-btn enabled state based on selection
+      function updateSendBtnState() {
+        if (submitBtn) {
+          const any = document.querySelectorAll('.row-checkbox:checked').length > 0;
+          submitBtn.disabled = !any;
+          submitBtn.style.opacity = any ? '1' : '0.6';
+          submitBtn.style.cursor = any ? 'pointer' : 'not-allowed';
+        }
+      }
+
+      // Initialize button state
+      updateSendBtnState();
+
+      // Listen for checkbox changes - only allow one checkbox to be checked at a time
+      document.addEventListener('change', function(e) {
+        if (e.target && e.target.classList && e.target.classList.contains('row-checkbox')) {
+          // If this checkbox is checked, uncheck all other checkboxes
+          if (e.target.checked) {
+            document.querySelectorAll('.row-checkbox').forEach(checkbox => {
+              if (checkbox !== e.target) {
+                checkbox.checked = false;
+              }
+            });
+          }
+          updateSendBtnState();
+        }
+      });
+
+      document.querySelectorAll('.view-attachment').forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          const recordId = this.getAttribute('data-id');
+          showAttachment(recordId);
+        });
+      });
+      // download links should go through the same authenticated flow so Zoho permissions and params are preserved
+      document.querySelectorAll('.download-attachment').forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          const recordId = this.getAttribute('data-id');
+          showAttachment(recordId, {download: true});
+        });
+      });
+      document.querySelectorAll('.desc-toggle').forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          const id = this.getAttribute('data-id');
+          const mode = this.getAttribute('data-mode');
+          const shortElem = document.getElementById(`desc-short-${id}`);
+          const fullElem = document.getElementById(`desc-full-${id}`);
+          if (mode === "more") {
+            if (shortElem) shortElem.style.display = "none";
+            if (fullElem) fullElem.style.display = "";
+          } else {
+            if (shortElem) shortElem.style.display = "";
+            if (fullElem) fullElem.style.display = "none";
+          }
+        });
+      });
+      setTimeout(() => {
+        document.querySelectorAll('.description-clamp').forEach(clampElem => {
+          const moreBtn = clampElem.querySelector('.desc-toggle[data-mode="more"]');
+          if (clampElem.scrollHeight > clampElem.clientHeight + 1) {
+            if (moreBtn) moreBtn.style.display = "inline";
+          } else {
+            if (moreBtn) moreBtn.style.display = "none";
+          }
+        });
+      }, 0);
+    }
+    function escapeHtml(text) {
+      if (!text) return "";
+      return text.replace(/[&<>"']/g, function(m) {
+        return ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        })[m];
+      });
+    }
+    function getDescriptionHtml(description, id) {
+      if (!description) return "";
+      const safeId = id ? id : Math.random().toString(36).substr(2, 9);
+      const safeDesc = escapeHtml(description);
+      return `
+        <span id="desc-short-${safeId}" class="description-clamp">
+          ${safeDesc}<span class="desc-toggle" data-id="${safeId}" data-mode="more" style="display:none;"> more</span>
+        </span>
+        <span id="desc-full-${safeId}" style="display:none;">
+          ${safeDesc}
+          <span class="desc-toggle" data-id="${safeId}" data-mode="less"> less</span>
+        </span>
+      `;
+    }
+
+    function showAttachment(recordId, opts) {
+      opts = opts || {};
+      const forceDownload = !!opts.download;
+      ZOHO.CRM.API.getRecord({Entity: "Knowledge_Base", RecordID: recordId})
+        .then(function(response) {
+          const record = response.data && response.data[0];
+          if (!record) return;
+          const att = firstAtt(record);
+          if (!att) {
+            document.getElementById('attachmentContent').innerHTML = `
+              <div style="display:flex;align-items:center;justify-content:center;height:320px;font-size:1.35rem;color:#b23c3c;font-weight:600;letter-spacing:0.5px;">No attachment found.</div>`;
+            document.getElementById('attachmentModal').classList.add('show');
+            return;
+          }
+
+          console.log('Attachment details:', att);
+          
+          // Prefer the preview URL for viewing. Fall back to download URL but request inline mode
+          const previewUrl = att.preview_Url || att.$preview_url || null;
+          const downloadUrl = att.download_Url || att.$download_url || null;
+
+          // helper to normalize/expand relative urls
+          const buildFull = (raw) => {
+            if (!raw) return null;
+            if (/^https?:\/\//.test(raw)) return raw;
+            if (raw.startsWith('/')) {
+              const urlParams = new URLSearchParams(window.location.search);
+              const serviceOrigin = urlParams.get('serviceOrigin') || window.location.origin;
+              return serviceOrigin + raw;
+            }
+            return raw;
+          };
+
+          // If not forcing a download, prefer preview URL so users see content instead of downloading
+          if (!forceDownload && previewUrl) {
+            const fullPreview = buildFull(previewUrl);
+            console.log('Opening preview URL:', fullPreview);
+            window.open(fullPreview, '_blank');
+            return;
+          }
+
+          if (downloadUrl) {
+            let fullUrl = buildFull(downloadUrl);
+            // If caller didn't request a download, try to request inline display where possible
+            if (!forceDownload) {
+              fullUrl = fullUrl.replace('downLoadMode=default', 'downLoadMode=inline');
+              console.log('Opening download (inline) URL:', fullUrl);
+            } else {
+              // force download: keep default download mode (server should send Content-Disposition)
+              console.log('Opening download URL (force download):', fullUrl);
+            }
+            window.open(fullUrl, '_blank');
+            return;
+          }
+
+          // No usable preview or download URL found
+          document.getElementById('attachmentContent').innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:center;height:320px;font-size:1.1rem;color:#b23c3c;font-weight:600;">Attachment URL not available.</div>`;
+          document.getElementById('attachmentModal').classList.add('show');
+        })
+        .catch(function(err) {
+          console.error(err);
+          document.getElementById('attachmentContent').innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:center;height:320px;font-size:1.1rem;color:#b23c3c;font-weight:600;">Unable to load attachment.</div>`;
+          document.getElementById('attachmentModal').classList.add('show');
+        });
+    }
+        
+    document.getElementById('closeAttachmentModal').onclick = function() {
+      document.getElementById('attachmentModal').classList.remove('show');
+      document.getElementById('attachmentContent').innerHTML = '';
+    };
+    document.getElementById('attachmentModal').onclick = function(e) {
+      if (e.target === this) {
+        this.classList.remove('show');
+        document.getElementById('attachmentContent').innerHTML = '';
+      }
+    };
+  </script>
+  <!-- Mail Preview Modal -->
+<div id="mailModal" class="fixed inset-0 bg-black/40 hidden z-[100000] flex items-center justify-center">
+  <div class="bg-white rounded-lg shadow-xl w-[520px] max-w-[95vw] p-5">
+    
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="text-lg font-semibold">Email Preview</h3>
+      <button id="closeMailModal" class="text-gray-500 hover:text-black text-xl">&times;</button>
+    </div>
+
+    <div class="space-y-3 text-sm">
+      <div>
+        <label class="font-medium text-slate-600">Title</label>
+        <div id="mailTitle" class="mt-1 text-slate-800"></div>
+      </div>
+
+      <div>
+        <label class="font-medium text-slate-600">Description</label>
+        <div id="mailDescription" class="mt-1 text-slate-700 text-sm"></div>
+      </div>
+
+      <div>
+        <label class="font-medium text-slate-600">Attachment</label>
+        <div id="mailAttachment" class="mt-1"></div>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-3 mt-6">
+      <button id="cancelMail" class="px-4 py-2 rounded-md border text-sm">Cancel</button>
+      <button id="sendNow" class="px-4 py-2 rounded-md bg-primary text-white text-sm font-semibold">
+        Send
+      </button>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
